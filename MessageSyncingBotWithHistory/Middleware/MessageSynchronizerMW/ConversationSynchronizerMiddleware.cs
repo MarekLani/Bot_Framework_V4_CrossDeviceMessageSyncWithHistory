@@ -43,7 +43,7 @@ namespace MessageSyncingBotWithHistory.Middleware
                 if (turnContext.Activity.Name == "webchat/join")
                 {
                     var reference = turnContext.Activity.GetConversationReference();
-                    _ucs.AddConvIdReference(turnContext.Activity.From.Id, turnContext.Activity.Conversation.Id);
+                    _ucs.AddConvId(turnContext.Activity.From.Id, turnContext.Activity.Conversation.Id);
 
                     var pastActivities = _ucs.GetActivities(turnContext.Activity.From.Id);
                     if (pastActivities.Count > 0)

@@ -10,7 +10,7 @@ namespace MessageSyncingBotWithHistory.Middleware
     {
         private static List<SampleUserConversationsStorageStructure> userConversations = new List<SampleUserConversationsStorageStructure>();
 
-        public void AddConvIdReference(string userId, string convId)
+        public void AddConvId(string userId, string convId)
         {
             if (userConversations.Where(u => u.UserId == userId).Any())
             {

@@ -52,9 +52,9 @@ namespace MessageSyncingBotWithHistory.Controllers
                     res = await GenerateDirectLineToken(user.UserId);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-               return BadRequest();
+               return BadRequest(e.Message);
             }
             if (res != "")
                 return Ok(res);

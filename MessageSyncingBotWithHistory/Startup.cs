@@ -37,7 +37,8 @@ namespace MessageSyncingBotWithHistory
 
             services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_1);
 
-            var ucsp = new SampleUserConversationsStaticStorageProvider();
+            var ucsp = new RedisUserConversationStorageProvider(_configuration);
+
             services.AddSingleton<IUserConversationsStorageProvider>(ucsp);
 
             services.AddSingleton<ICredentialProvider, ConfigurationCredentialProvider>();

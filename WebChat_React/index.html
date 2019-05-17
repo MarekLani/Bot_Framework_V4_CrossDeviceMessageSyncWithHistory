@@ -42,7 +42,7 @@
             name: 'Marekk'
         };
 		
-		const res = await fetch('https://ab4baad0.eu.ngrok.io/api/directline/token', { 
+		const res = await fetch('http://localhost:3978/api/directline/token', { 
 			body: JSON.stringify({userId: user.id } ),
 			headers: {
 				'Content-Type': 'application/json'
@@ -50,28 +50,22 @@
 			method: 'POST' 
 		});
 		
-		
         const { token, new_conv, conversationId } = await res.json();
         const { ReactWebChat } = window.WebChat;
 		
 	   var directLine;
-	   console.log(new_conv)
 	   if(new_conv)
 		directLine = window.WebChat.createDirectLine({ token: token })
 	   else{
 		directLine = window.WebChat.createDirectLine({ token: token, conversationId: conversationId })	
-		console.log(conversationId);
-		}
+	   }
 	   
 	   
        const store = window.WebChat.createStore(
          {},
          ({ dispatch }) => next => action => {
-			//console.log(action.type);
            if (action.type === 'DIRECT_LINE/POST_ACTIVITY') {
-
              action = window.simpleUpdateIn(action, ['payload', 'activity', 'channelData', 'chatWindowID'], () => 'myId');
-			 console.log(action);
            }
 		   
 		   if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
@@ -93,16 +87,6 @@
           <ReactWebChat directLine={directLine} store={store} userID={user.id} />,
           document.getElementById('webchat')
         );
-	
-		   //directLine.postActivity({
-                //from: user,
-               // name: 'requestWelcomeDialog',
-                //type: 'event',
-               // value: 'myValue'
-            //})
-            //.subscribe(function (id) {
-             //   console.log('"trigger requestWelcomeDialog" sent' + id);
-            //});
 
         document.querySelector('#webchat > *').focus();
       })().catch(err => console.error(err));

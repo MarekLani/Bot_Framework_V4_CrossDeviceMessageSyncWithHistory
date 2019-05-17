@@ -13,7 +13,7 @@ namespace MessageSyncingBotWithHistory.Middleware
     /// </summary>
     public interface IUserConversationsStorageProvider
     {
-        void AddConvIdReference(string userId, string convId);
+        void AddConvId(string userId, string convId);
         void AddUser(string userId);
         string GetUserConversationId(string userId);
         bool HasUser(string userId);
