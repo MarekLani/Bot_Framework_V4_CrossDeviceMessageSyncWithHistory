@@ -37,15 +37,15 @@ namespace MessageSyncingBotWithHistory
 
             services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_1);
 
-            var ucsp = new RedisUserConversationStorageProvider(_configuration);
-
-            services.AddSingleton<IUserConversationsStorageProvider>(ucsp);
+            services.AddSingleton<IUserConversationsStorageProvider, RedisUserConversationStorageProvider>();
 
             services.AddSingleton<ICredentialProvider, ConfigurationCredentialProvider>();
 
             services.AddSingleton<IBotFrameworkHttpAdapter, BotFrameworkHttpAdapter>((provider) => {
                 var cred = provider.GetRequiredService<ICredentialProvider>();
+                var ucsp = provider.GetRequiredService<IUserConversationsStorageProvider>();
                 var adpt = new BotFrameworkHttpAdapter(cred);
+
                 adpt.Use(new ConversationSynchronizationMiddleware(ucsp, adpt, _configuration));
 
                 return adpt;
