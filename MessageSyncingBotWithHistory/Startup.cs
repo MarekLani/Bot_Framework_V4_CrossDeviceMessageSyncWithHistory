@@ -46,7 +46,7 @@ namespace MessageSyncingBotWithHistory
                 var ucsp = provider.GetRequiredService<IUserConversationsStorageProvider>();
                 var adpt = new BotFrameworkHttpAdapter(cred);
 
-                adpt.Use(new ConversationSynchronizationMiddleware(ucsp, adpt, _configuration));
+                adpt.Use(new ConversationHistoryMiddleware(ucsp, adpt, _configuration));
 
                 return adpt;
             });

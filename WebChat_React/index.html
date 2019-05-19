@@ -42,6 +42,7 @@
             name: 'Marek L'
         };
 		
+		//obtain direct lin content form bot backend, change to your bot backend URL
 		const res = await fetch('http://localhost:3978/api/directline/token', { 
 			body: JSON.stringify({userId: user.id } ),
 			headers: {
@@ -50,21 +51,21 @@
 			method: 'POST' 
 		});
 		
-        const { token, new_conv, conversationId } = await res.json();
+        const { token, conversationId } = await res.json();
         const { ReactWebChat } = window.WebChat;
 		
 	   var directLine;
-	   if(new_conv)
-		directLine = window.WebChat.createDirectLine({ token: token })
-	   else{
-		directLine = window.WebChat.createDirectLine({ token: token, conversationId: conversationId })	
-	   }
-	   
+	   if(conversationId == '')
+	      directLine = window.WebChat.createDirectLine({ token: token })
+	   els{
+          //Initialize Web Chat with conversation id received from bot backend
+		  directLine = window.WebChat.createDirectLine({ token: token, conversationId: conversationId })	 
 	   
        const store = window.WebChat.createStore(
          {},
          ({ dispatch }) => next => action => {
            if (action.type === 'DIRECT_LINE/POST_ACTIVITY') {
+			 //example of setting channelData
              action = window.simpleUpdateIn(action, ['payload', 'activity', 'channelData', 'chatWindowID'], () => 'myId');
            }
 		   

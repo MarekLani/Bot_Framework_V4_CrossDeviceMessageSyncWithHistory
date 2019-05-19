@@ -43,14 +43,16 @@ namespace MessageSyncingBotWithHistory.Controllers
             
             try
             {
-                if (Request.Query.TryGetValue("token", out token))
-                {
-                    res = await RenewDirectLineToken(token);
-                }
-                else
-                {
-                    res = await GenerateDirectLineToken(user.UserId);
-                }
+                res = await RenewDirectLineToken(token);
+                //If we would not be using Web Chat there would be need for token renewal logic, web chat handles it by itself
+                //if (Request.Query.TryGetValue("token", out token))
+                //{
+                //    res = await RenewDirectLineToken(token);
+                //}
+                //else
+                //{
+                //    res = await GenerateDirectLineToken(user.UserId);
+                //}
             }
             catch (Exception e)
             {
@@ -84,9 +86,10 @@ namespace MessageSyncingBotWithHistory.Controllers
             {
                 var str = rsp.Content.ReadAsStringAsync().Result;
                 var obj = JsonConvert.DeserializeObject<DirectlineResponse>(str);
-               
-                //If new conversation than convId is empty string
-                obj.new_conv = (convId == "");
+
+                //If convId is empty string we are activating conversation with the user for the first time
+                if (convId == "")
+                    obj.conversationId = "";
              
                 //token = obj.token;
     
@@ -119,10 +122,6 @@ namespace MessageSyncingBotWithHistory.Controllers
         public string conversationId { get; set; }
         public string token { get; set; }
         public int expires_in { get; set; }
-
-        //is this conv new? or we are reusing existing conv?
-        public bool new_conv { get; set; } = true;
-
     }
 
     public class User

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MessageSyncingBotWithHistory.Middleware
 {
-    public class ConversationSynchronizationMiddleware: IMiddleware
+    public class ConversationHistoryMiddleware: IMiddleware
     {
         private IUserConversationsStorageProvider _ucs;
         private BotAdapter _adapter;
@@ -19,7 +19,7 @@ namespace MessageSyncingBotWithHistory.Middleware
 
         private static int timeOffset = 0;
 
-        public ConversationSynchronizationMiddleware(IUserConversationsStorageProvider ucs, BotAdapter adapter, IConfiguration configuration)
+        public ConversationHistoryMiddleware(IUserConversationsStorageProvider ucs, BotAdapter adapter, IConfiguration configuration)
         {
             _ucs = ucs;
             _adapter = adapter;
@@ -40,6 +40,8 @@ namespace MessageSyncingBotWithHistory.Middleware
 
             if (turnContext.Activity.Type == ActivityTypes.Event)
             {
+                //If there was any previous conversation with the user, 
+                //we try to obtain history from storage provider and push it to newly opened conversation
                 if (turnContext.Activity.Name == "webchat/join")
                 {
                     var reference = turnContext.Activity.GetConversationReference();
@@ -50,6 +52,7 @@ namespace MessageSyncingBotWithHistory.Middleware
                     {
                         var connectorClient = turnContext.TurnState.Get<ConnectorClient>(typeof(IConnectorClient).FullName);
 
+                        //We select only activities of type Message
                         var activities = pastActivities
                             .Where(a => a.Type == ActivityTypes.Message)
                             .Select(ia => (Activity)ia)
@@ -64,15 +67,14 @@ namespace MessageSyncingBotWithHistory.Middleware
                         {
                             var take = Math.Min(500, (activities.Count - count));
                             var transcript = new Transcript((activities.GetRange(count, take) as IList<Activity>));
+
+                            //Thanks to channelData field activities will only get displayed in Web Chat Windows, which did not display them previously
                             await connectorClient.Conversations.SendConversationHistoryAsync(turnContext.Activity.Id, transcript, cancellationToken: cancellationToken);
                             count += 500;
                         }
-                       
-
                     }
                 }
             }
-
 
             // log incoming activity at beginning of turn
             if (turnContext.Activity != null)
