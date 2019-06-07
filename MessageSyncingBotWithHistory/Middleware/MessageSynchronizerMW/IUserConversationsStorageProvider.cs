@@ -14,7 +14,6 @@ namespace MessageSyncingBotWithHistory.Middleware
     public interface IUserConversationsStorageProvider
     {
         void AddConvId(string userId, string convId);
-        void AddUser(string userId);
         string GetUserConversationId(string userId);
         bool HasUser(string userId);
 

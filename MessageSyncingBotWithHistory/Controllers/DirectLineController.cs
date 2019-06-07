@@ -43,7 +43,7 @@ namespace MessageSyncingBotWithHistory.Controllers
             
             try
             {
-                res = await RenewDirectLineToken(token);
+                res =  await GenerateDirectLineToken(user.UserId);
                 //If we would not be using Web Chat there would be need for token renewal logic, web chat handles it by itself
                 //if (Request.Query.TryGetValue("token", out token))
                 //{
@@ -76,7 +76,6 @@ namespace MessageSyncingBotWithHistory.Controllers
             if (userConversationStorageProvider.HasUser(userId))
             {
                 convId = userConversationStorageProvider.GetUserConversationId(userId);
-                userConversationStorageProvider.AddUser(userId);
                 rsp = await clnt.GetAsync($"https://directline.botframework.com/v3/directline/conversations/{convId}");
             }
             else
@@ -90,8 +89,6 @@ namespace MessageSyncingBotWithHistory.Controllers
                 //If convId is empty string we are activating conversation with the user for the first time
                 if (convId == "")
                     obj.conversationId = "";
-             
-                //token = obj.token;
     
                 return JsonConvert.SerializeObject(obj);
             }

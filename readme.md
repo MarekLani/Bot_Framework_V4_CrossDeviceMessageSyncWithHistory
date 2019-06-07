@@ -1,32 +1,36 @@
 ## Bot Framework Cross Window Conversation Sync and Chat History Middleware for Webchat (C#)
 
-When implementing chat bot solution there might be requirement for implementation of cross window/device conversation synchronization and loading of history of previous chats with the user. Example of scenario when such functionality might be needed is scenario of returning of ordered goods within e-commerce chat bot solution. Before returning goods, many e-commerce websites require customer to fill and scan goods return form. In case of using bot, user may initiate return goods conversation flow on his computer, but at some point when he needs to scan the form, he opens new chat window on a smartphone, which enables him to scan the form in much more convenient way. In order to keep the context of conversation, there is need for loading of chat history and message synchronization between original and new chat window.
+When implementing chat bot solution there might be requirement for implementation of cross window/device conversation synchronization and loading of history of previous chats with the user. This repository shows how to implement such functionality using **Bot Framework C# SDK** and **Webchat component connected thru Direct Line channel**.
 
-Existing popular messaging solutions, which may act as chat bot channel, support this functionality out of the box, so for you as chat bot developer, there is no need to do anything in terms of message history and synchronization. However in case you are using directline and webchat component in your solution, whether integrated to your web site or mobile application, it requires some extra steps to have this functionality available. 
+Example of scenario when loading of message history and message synchronization across multiple chat windows might be needed is scenario of returning of ordered goods thru e-commerce chat bot solution. Before returning goods, many e-commerce websites require customer to fill and scan goods return form. In case of using bot, user may initiate return goods conversation flow on his computer, but at some point when he needs to scan the form, he opens new chat window on a smartphone, which enables him to scan the form in much more convenient way. In order to keep the context of conversation, there is need for loading of chat history and message synchronization between original and newly opened chat window.
 
-There are two pieces of functionality, that needs to be implemented:
+Existing popular messaging services, which may act as chat bot channel, support this functionality out of the box, so for you as chat bot developer, there is no need to do anything in terms of message history and synchronization. However, in case you are using Direct Line and Web Chat component in your solution, whether integrated to your web site or mobile application, it requires some extra steps to have this functionality available. 
 
-- **Cross Chat Window Message Syncing** - by this term we mean specific behavior of chat bot, when it simultaneously displays sent and received messages in all the chat windows that specific user had opened. When using Web Chat, implementation of this behavior is quite straightforward, because conversation will be by default synced between all the web chat windows which share the same Conversation ID. SO in order to have this conversation synching capability available in the bot, there is need for implementation of Web Chat activation with per user Conversation ID.
+There are two pieces of functionality, that need to be implemented:
 
-- **Message History** - to implement message history, there is need to implement message logging feature and subsequently loading of history into newly opened window.
+- **Cross Chat Window Message Syncing** - by this term we mean specific behavior of chat bot, when it simultaneously displays sent and received messages in all the chat windows that specific user had opened. When using Web Chat, implementation of this behavior is quite straightforward, because conversation will be synced between all the web chat windows which share the same conversation id by default. So in order to have this conversation syncing capability available,  Web Chat components should be activated with per user conversation id.
+
+- **Message History** - to implement message history, there is need to implement message logging feature and subsequently loading of history into newly opened chat window.
 
 
 This repository is split into two parts:  
 
-- **Sample website integrating webchat component** (we used react web chat component)   
-- **Bot builder backend with middleware for logging of conversation history and it's injecting into newly opened chat window**
+- [**Sample website integrating Web Chat component** (we used react Web Chat component)](/WebChat_React/
+  )   
+- [**Bot builder backend with middleware for logging of conversation history and it's injecting into newly opened chat window**](/MessageSyncingBotWithHistory/
+  )
 
-Bellow we state code blocks containing most important part of the solution and 
+Bellow we state code blocks containing most important part of the solution.
 
-Note: We do not discuss basics of how to activate direct line channel. For information on that piece please see official documentation:
+**Note:** We do not discuss basics of how to activate direct line channel. For information on this piece please see official documentation: https://github.com/microsoft/BotFramework-WebChat
 
-### **Sample website integrating webchat component**
+### **Sample website integrating Web Chat component**
 
-As stated, to implement cross chat windows message syncing it is needed to activate Web Chat windows with the same Conversation Id per user. It is role of the backend to store key value pairs of user ids and conversation ids, however webchat activation needs to be different in case of activation of first Web Chat windows for the user and all subsequent windows. In order to activate web chat window, there is need to obtain directline token from bot backend. In our solution besides token bot backend returns also conversation Id field, which is empty in case there was no previous conversation with the user. Otherwise it holds conversation id of first conversation with the user. This way it is possible to secure one and only one conversation Id for the user. When obtaining token there is need to provide user id, which will uniquely identify the user.
+As stated, to implement cross chat windows message syncing, ***Web Chat activation with the same conversation id per user*** is needed. In order to activate Web Chat window, there is need to obtain Direct Line token from bot backend. Besides token bot backend returns also conversation id field, which is empty in case there was no previous conversation with the user. Otherwise it holds conversation id of the first conversation with the user. This way it is possible to secure one and only one conversation id for the user. When obtaining token there is need to provide user id, which will uniquely identify the user.
 
  When webchat window gets activated it sends WebChat/join event to bot backend, which triggers loading of history. 
 
-Bellow we state implementation of Web Chat windows activation:
+Bellow we state implementation of Web Chat window activation:
 
 ```javascript
 <div id="webchat" role="main"></div>
@@ -60,10 +64,6 @@ Bellow we state implementation of Web Chat windows activation:
     const store = window.WebChat.createStore(
         {},
         ({ dispatch }) => next => action => {
-        if (action.type === 'DIRECT_LINE/POST_ACTIVITY') {
-			//example of setting channelData
-            action = window.simpleUpdateIn(action, ['payload', 'activity', 'channelData', 'chatWindowID'], () => 'myId');
-        }
 		   
 		if (action.type === 'DIRECT_LINE/CONNECT_FULFILLED') {
             // When we receive DIRECT_LINE/CONNECT_FULFILLED action, we will send an event activity using WEB_CHAT/SEND_EVENT
@@ -92,13 +92,13 @@ Bellow we state implementation of Web Chat windows activation:
 
 
 
-### Bot Builder Conversation History Middleware
+### Bot Builder backend
 
-There are three important components on the backend part, it is **direct line token generation logic**, **user conversation storage provider**, which determines underlying storage used for mapping conversation ids to user ids and for storing of chat history and last but not least **history middleware** responsible for storing and displaying chat history. 
+There are three important components on the backend part of the solution. It is **direct line token generation logic**, **user conversation storage provider**, which determines underlying storage used for mapping conversation ids to user ids and for storing of chat history and last but not least **history middleware** responsible for storing and displaying chat history. 
 
 #### Direct line token generation
 
- As we implemented bot backend using bot builder v 4.4 packages, we utilized possibility to create new controller with actions. Token generation logic can be found in *DirectLineController* class. Controller accesses *IConfiguration* and *IUserConversationStorageProvider* object from dependency injection controller.  Configuration object is needed to obtain direct line secret from app settings, User Conversation Storage Provider is needed to check if there was any previous conversation with the user. If so, it provides us with the conversation Id. Otherwise new key value pair is created. See implementation of *DirectLineController* class bellow:
+ As we implemented bot backend using bot builder v 4.4 packages, we utilized possibility to create new controller with actions. Token generation logic can be found in ***DirectLineController*** class. Controller accesses *IConfiguration* and *IUserConversationStorageProvider* object from dependency injection controller.  Configuration object is used to obtain direct line secret from app settings. User Conversation Storage Provider is used to check if there was any previous conversation with the user. If so, it provides us with the conversation Id. Otherwise new key value pair is created. See implementation of *DirectLineController* class bellow:
 
 ```C#
 using Microsoft.Bot.Builder;
@@ -132,7 +132,7 @@ public class DirectLineController : ControllerBase
             
         try
         {
-            res = await RenewDirectLineToken(token);
+            res = await GenerateDirectLineToken(user.UserId);
         }
         catch (Exception e)
         {
@@ -155,7 +155,6 @@ public class DirectLineController : ControllerBase
         if (userConversationStorageProvider.HasUser(userId))
         {
             convId = userConversationStorageProvider.GetUserConversationId(userId);
-            userConversationStorageProvider.AddUser(userId);
             rsp = await clnt.GetAsync($"https://directline.botframework.com/v3/directline/conversations/{convId}");
         }
         else
@@ -169,8 +168,6 @@ public class DirectLineController : ControllerBase
             //If convId is empty string we are activating conversation with the user for the first time
             if (convId == "")
                 obj.conversationId = "";
-             
-            //token = obj.token;
     
             return JsonConvert.SerializeObject(obj);
         }
@@ -192,15 +189,22 @@ public class User
 }
 ```
 
+**Note:** Conversation id and user id pair is being stored in history middleware, when WebChat/join event is fired from frontend.
+
 #### User Conversation Storage Provider
 
-User conversation storage provider is important part to the solution, because it enables simple hooking up of the solution to storage service of your choice. There are two different implementations of storage provider within the solution. First *SampleUserConversationStaticStorageProvider* uses static properties to store user ids, conversation ids and conversation history. This means all the data gets erased on bot restart and so this sample provider is meant only for testing purposes. Second provider is built on top of Redis database and so data is stored persistently.  So the providers can be used and accessed from dependency injection container inside of *DirectLineController* and *HistoryMiddleware* they need to implement *IUserConversationStorageProvider* interface. This approach makes it simple for you to implement your own storage provider, because neither *DirectlineController* neither *HistoryMiddleware* needs to know specific implementation of the storage provider. Each user conversation storage provider needs to override six methods specified by the interface:
+User conversation storage provider is important part to the solution, because it enables simple hooking up of the solution to storage service of your choice. There are two different implementations of storage provider within the solution. 
+
+First *SampleUserConversationStaticStorageProvider* uses static properties to store user ids, conversation ids and conversation history. This means all the data gets erased on bot restart and is meant only for testing purposes!
+
+Second provider *RedisUserConversationStorageProvider* is built on top of Redis database, thus data is stored persistently.  
+
+So the providers can be used and accessed from dependency injection container inside of *DirectLineController* and *HistoryMiddleware* (we will talk about this one,  bit further in the text) they need to implement *IUserConversationStorageProvider* interface. This approach makes it simple for you to implement your own storage provider, because neither *DirectlineController*, neither *HistoryMiddleware* needs to know specific implementation of the storage provider. Each user conversation storage provider needs to override five methods specified by the interface:
 
 ```C#
 public interface IUserConversationsStorageProvider
 {
     void AddConvId(string userId, string convId);
-    void AddUser(string userId);
     string GetUserConversationId(string userId);
     bool HasUser(string userId);
     void LogActivity(IActivity a, string userId);
@@ -238,13 +242,6 @@ namespace MessageSyncingBotWithHistory.Middleware
             db.StringSet(String.Format(userConvKey, userId), convId);
         }
 
-        public void AddUser(string userId)
-        {
-
-			IDatabase db = redis.GetDatabase();
-			db.StringSet(String.Format(userConvKey, userId), "");
-        }
-
         public List<IActivity> GetActivities(string userId)
         {
             IDatabase db = redis.GetDatabase();
@@ -280,15 +277,15 @@ namespace MessageSyncingBotWithHistory.Middleware
 
 ```
 
-
-
 #### Conversation History Middleware
 
-History logging and loading is implemented within piece of middleware which enables us to intercept message processing flow within our bot backend. Read more about middleware concept in official documentation. 
+History logging and loading is implemented within piece of middleware which enables us to intercept message processing flow within our bot backend. Read more about middleware concept in [official documentation](https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-concept-middleware?view=azure-bot-service-4.0). 
 
-Middleware is capable to log every message sent to or form user + activity updates a delete events. Data storage is determined by UseeConversationStorageProvider object obtained from dependency injection container.
+History middleware is capable to log messages sent to or from a user, activity updates and delete events. Data storage is determined by *UserConversationStorageProvider* passed thru dependency injection container.
 
-Loading of history activities and sending them to newly opened chat windows happens on webchat/join event received. Activities are obtained from user conversation storage provider (only messages) and are sent to all web chat windows which share the same Conversation Id. Web Chat window acts intelligently in a way that it only displays messages if they were not displayed or sent and received previously. This behavior is possible thanks to channelData field of the activity, which holds unique identification of the activity.
+Loading of history activities and sending them to newly opened chat window happens when webchat/join event is fired by website containing Web Chat component. Activities are obtained from user conversation storage provider (only messages) and are sent to all web chat windows which share the same Conversation Id. Web Chat component is smart  and it only displays messages not displayed, sent or received before. This behavior is possible thanks to *channelData* field of the activity object, which holds unique identification of the activity.
+
+Bellow we state implementation of History Middleware.
 
 ```C#
 using Microsoft.Bot.Builder;
@@ -338,6 +335,8 @@ namespace MessageSyncingBotWithHistory.Middleware
                 if (turnContext.Activity.Name == "webchat/join")
                 {
                     var reference = turnContext.Activity.GetConversationReference();
+                    
+                    //Create conversation id user id pair
                     _ucs.AddConvId(turnContext.Activity.From.Id, turnContext.Activity.Conversation.Id);
 
                     var pastActivities = _ucs.GetActivities(turnContext.Activity.From.Id);
@@ -450,9 +449,9 @@ namespace MessageSyncingBotWithHistory.Middleware
 
 ```
 
-#### Configuring services in Startup.cs
+#### Configuring services in Startup.cs (Feeding Dependency Injection Container)
 
-To put all pieces together there were changes needed also in startup.cs file where Dependency Injection container is being fed with the objects.
+To put all pieces together there were changes needed also in *Startup* class where Dependency Injection container is being fed with objects. See implementation bellow. 
 
 ```c#
  public class Startup

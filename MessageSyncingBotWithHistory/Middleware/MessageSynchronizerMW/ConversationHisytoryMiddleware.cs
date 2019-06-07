@@ -45,6 +45,8 @@ namespace MessageSyncingBotWithHistory.Middleware
                 if (turnContext.Activity.Name == "webchat/join")
                 {
                     var reference = turnContext.Activity.GetConversationReference();
+
+                    //Create conversation id user id pair
                     _ucs.AddConvId(turnContext.Activity.From.Id, turnContext.Activity.Conversation.Id);
 
                     var pastActivities = _ucs.GetActivities(turnContext.Activity.From.Id);

@@ -25,18 +25,6 @@ namespace MessageSyncingBotWithHistory.Middleware
             db.StringSet(String.Format(userConvKey, userId), convId);
         }
 
-        public void AddUser(string userId)
-        {
-            try
-            {
-                IDatabase db = redis.GetDatabase();
-                db.StringSet(String.Format(userConvKey, userId), "");
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
 
         public List<IActivity> GetActivities(string userId)
         {

@@ -22,10 +22,6 @@ namespace MessageSyncingBotWithHistory.Middleware
             }
         }
 
-        public void AddUser(string userId)
-        {
-            userConversations.Add(new SampleUserConversationsStorageStructure(userId));
-        }
 
         public List<IActivity> GetActivities(string userId)
         {
